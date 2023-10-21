@@ -56,8 +56,16 @@ def parse_expression():
         consume_token()
         right_term = parse_term()
         # left_term = {"type": "binary", "left": left_term, "operator": op, "right": right_term}
-        left_term = [op, left_term, right_term]
+        left_term = [op, left_term, right_term, 1]
     return left_term
+
+def handle_number_signs():
+    multiplier = 1
+    while get_current_token() in ["+", "-"]:
+        if get_current_token() == "-":
+            multiplier *= -1
+        consume_token()
+    return multiplier
 
 def parse_term():
     left_factor = parse_factor()
@@ -65,19 +73,22 @@ def parse_term():
         op = get_current_token()
         consume_token()
         right_factor = parse_factor()
-        left_factor = [op, left_factor, right_factor]
+        left_factor = [op, left_factor, right_factor, 1]
         #left_factor = {"type": "binary", "left": left_factor, #"operator": op, "right": right_factor}
     return left_factor
 
 def parse_factor():
+    multiplier = handle_number_signs()
     current_token = get_current_token()
     if isinstance(current_token, list) and current_token[0] == "NUMBER":
         consume_token()
         #return {"type": "number", "value": current_token[1]}
-        return ["NUMBER", float(current_token[1])]
+        return ["NUMBER", multiplier * float(current_token[1])]
     elif current_token == "(":
         consume_token()  # Consume '('
         expr = parse_expression()
+        if expr[0] != "NUMBER":
+            expr[3] *= multiplier
         if get_current_token() != ")":
             raise Exception("Expected ')'")
         consume_token()  # Consume ')'
@@ -99,7 +110,5 @@ def test_parse():
 
 if __name__ == "__main__":
     test_parse
-    print(parse(['print', ['NUMBER', 3], '+', ['NUMBER', 4], '*', '(', ['NUMBER', 5], '-', ['NUMBER', 2], ')', ';']))
-
-
-
+    print(parse(['print', '-', ['NUMBER', 3], '+', '-', ['NUMBER', 4], '*', '(', '-', '+', '-', '+', '-', '-', '-', '-', '-', '+', ['NUMBER', 5], '-', '-', ['NUMBER', 2], ')', '+', ['NUMBER', 3], '*', ['NUMBER', 2], '-', ['NUMBER', 1], '+', ['NUMBER', 0], ';']))
+    print(parse(['print', ['NUMBER', 3], '+', '(', '-', ['NUMBER', 4], '*', ['NUMBER', 3], ')', '+', '-', '(', ['NUMBER', 4], '*', ['NUMBER', 5], ')', ';']))

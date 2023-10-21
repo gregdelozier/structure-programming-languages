@@ -5,11 +5,11 @@ binary_operations = {
     "/": lambda x, y: x / y,
 }
 
-def evaluate_binary_operation(op, x, y):
+def evaluate_binary_operation(op, x, y, multiplier=1):
     assert op in binary_operations
     x = evaluate(x)
     y = evaluate(y)
-    return binary_operations[op](x,y)
+    return binary_operations[op](x,y) * multiplier
 
 def evaluate_print(x):
     print(x)
@@ -25,7 +25,7 @@ def evaluate(tree):
         if op == "print":
             return evaluate_print(evaluate(tree[1]))
         if op in binary_operations:
-            return evaluate_binary_operation(op, tree[1], tree[2])
+            return evaluate_binary_operation(op, tree[1], tree[2], tree[3] if len(tree) > 3 else 1)
     else:
         raise Exception(f"Unknown content in AST={tree}")
 
@@ -36,6 +36,7 @@ def test_evaluate_operations():
     assert evaluate(["-", ["NUMBER",9], ["NUMBER",2]]) == 7
     assert evaluate(["*", ["NUMBER",4], ["NUMBER",2]]) == 8
     assert evaluate(["/", ["NUMBER",9], ["NUMBER",3]]) == 3
+    assert evaluate(['+', ['+', ['NUMBER', 3.0], ['*', ['NUMBER', -4.0], ['NUMBER', 3.0], 1], 1], ['*', ['NUMBER', 4.0], ['NUMBER', 5.0], -1], 1])  == -29.0
 
 def test_evaluate_print():
     evaluate(["print",["+",["NUMBER",9],["NUMBER",12]]])
@@ -48,3 +49,4 @@ if __name__ == "__main__":
     evaluate(['print', ['*', ['NUMBER', 4.0], ['-', ['NUMBER', 5], ['NUMBER', 2]]]])
     evaluate(['print', ['+', ['NUMBER', 3.0], ['*', ['NUMBER', 4.0], ['-', ['NUMBER', 5], ['NUMBER', 2]]]]])
     evaluate(['program', [['print', ['+', ['NUMBER', 3.0], ['*', ['NUMBER', 4.0], ['-', ['NUMBER', 5], ['NUMBER', 2]]]]]]])
+    evaluate(['program', [['print', ['+', ['+', ['NUMBER', 3.0], ['*', ['NUMBER', -4.0], ['NUMBER', 3.0], 1], 1], ['*', ['NUMBER', 4.0], ['NUMBER', 5.0], -1], 1]]]])
